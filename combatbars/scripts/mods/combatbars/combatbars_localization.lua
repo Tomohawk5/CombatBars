@@ -1,20 +1,21 @@
 local mod = get_mod("combatbars")
 
---#region UTILS
-local function colour_text(text, color_name)
-    local color = Color[color_name or "ui_disabled_text_color"](255, true) -- color[0] = alpha
-    return string.format("{#color(%s,%s,%s)}", color[2], color[3], color[4]) .. text .. "{#reset()}"
-end
-
 mod.colours = {
     -- (optional) [choose]
     -- ui_item_rarity_(dark|desaturated)_[1|2|3|4|5|6]
-    kinetic  = "ui_item_rarity_1",      -- grey
-    grenade  = "ui_item_rarity_2",      -- green
-    warp     = "ui_item_rarity_3",      -- blue
-    keystone = "ui_item_rarity_4",      -- purple
-    aura     = "ui_item_rarity_5",      -- orange
-    ability  = "ui_item_rarity_6",      -- red
+    kinetic  = "item_rarity_1", -- grey
+    grenade  = "item_rarity_2", -- green
+    warp     = "item_rarity_3", -- blue
+    keystone = "item_rarity_4", -- purple
+    aura     = "item_rarity_5", -- orange
+    ability  = "item_rarity_6", -- red
+
+    kinetic_dark  = "item_rarity_dark_1", -- grey
+    grenade_dark  = "item_rarity_dark_2", -- green
+    warp_dark     = "item_rarity_dark_3", -- blue
+    keystone_dark = "item_rarity_dark_4", -- purple
+    aura_dark     = "item_rarity_dark_5", -- orange
+    ability_dark  = "item_rarity_dark_6", -- red
 
     -- ui_[psyker|veteran|zealot|ogryn]_(text)
     psyker   = "ui_psyker",             -- blue
@@ -24,6 +25,12 @@ mod.colours = {
 
     disabled = "ui_disabled_text_color" -- dark grey
 }
+
+--#region UTILS
+local function colour_text(text, color_name)
+    local color = Color[color_name or "ui_disabled_text_color"](255, true) -- color[0] = alpha
+    return string.format("{#color(%s,%s,%s)}", color[2], color[3], color[4]) .. text .. "{#reset()}"
+end
 
 --#endregion
 

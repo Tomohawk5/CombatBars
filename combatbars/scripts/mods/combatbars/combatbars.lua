@@ -1,18 +1,7 @@
 local mod = get_mod("combatbars")
 mod.debugging = true
 
-
-mod:register_hud_element({
-    class_name = "ExampleElement",
-    filename = "path/to/element",
-    use_hud_scale = true,
-    visibility_groups = {
-        "alive"
-    },
-    validation_function = function(params)
-        return mod:is_enabled()
-    end
-})
+mod:io_dofile("combatbars/scripts/mods/combatbars/UI/register")
 
 local function recreate_hud()
     local ui_manager = Managers.ui
@@ -49,6 +38,6 @@ mod:hook_safe(UIViewHandler, "close_view", function(self, view_name, force_close
     end
 end)
 
-mod:command("CB.debug", "", function()
+mod:command("CBdebug", "", function()
     mod.debugging = not mod.debugging
 end)
