@@ -12,16 +12,18 @@ local HUD_elements = {
 
 mod.widget_angles = {}
 for _, e in ipairs(HUD_elements) do
+    if mod.debugging then mod:notify("Registering HUD:" .. e) end
     mod.widget_angles[e] = 0
-    mod:register_hud_element({
-        class_name = "HudElement" .. e,
+    local success = mod:register_hud_element({
+        class_name = "HudElementCombatBar_" .. e,
         filename = "combatbars/scripts/mods/combatbars/UI/" .. e .. "/elements",
         use_hud_scale = true,
         visibility_groups = {
             "alive"
         },
-        validation_function = function(params)
-            return mod:get(e .. "_enabled")
-        end
+        -- validation_function = function(params) -- omit = true
+        --     return mod:get(e .. "_enabled")
+        -- end
     })
+    if mod.debugging then mod:notify(success) end
 end

@@ -76,6 +76,15 @@ local localizations = {
     },
     --#endregion
     --#endregion
+
+    -- ##############################
+    -- #         TEXT_OPTION        #
+    -- ##############################
+    --#region TEXT_OPTION
+	text_option_krak = {
+		en = "Krak"
+	},
+    --#endregion
 }
 
 --#region COLOURS

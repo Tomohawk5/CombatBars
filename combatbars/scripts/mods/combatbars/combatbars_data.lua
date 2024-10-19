@@ -44,7 +44,8 @@ mod.text_options = table.enum(
     "none",
     "text_option_ability",
     "text_option_blitz",
-    "text_option_keystone"
+    "text_option_keystone",
+    "text_option_krak"
 )
 
 mod.value_options = table.enum(
@@ -74,11 +75,11 @@ function bar_widgets()
         },
         blitz = {
             colour = mod.colours.kinetic,
-            orientation = mod.orientation_options["orientation_option_vertical_flipped"]
+            orientation = mod.orientation_options["orientation_option_horizontal"]
         },
         keystone = {
             colour = mod.colours.keystone,
-            orientation = mod.orientation_options["orientation_option_vertical"]
+            orientation = mod.orientation_options["orientation_option_horizontal"]
         }
     }
     local widgets = {}
@@ -174,7 +175,7 @@ return {
                     {
                         setting_id = "blitz_orientation",
                         type = "dropdown",
-                        default_value = mod.orientation_options["orientation_option_vertical"],
+                        default_value = mod.orientation_options["orientation_option_horizontal"],
                         options = list_options(mod.orientation_options)
                     },
                     {

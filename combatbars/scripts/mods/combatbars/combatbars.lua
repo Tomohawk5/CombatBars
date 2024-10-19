@@ -1,5 +1,5 @@
 local mod = get_mod("combatbars")
-mod.debugging = true
+mod.debugging = false
 
 mod:io_dofile("combatbars/scripts/mods/combatbars/UI/register")
 
@@ -41,3 +41,8 @@ end)
 mod:command("CBdebug", "", function()
     mod.debugging = not mod.debugging
 end)
+
+mod._is_in_hub = function()
+    local game_mode_name = Managers.state.game_mode:game_mode_name()
+    return (game_mode_name == "hub" or game_mode_name == "prologue_hub")
+  end

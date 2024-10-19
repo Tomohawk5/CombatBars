@@ -9,12 +9,8 @@ local UIFontSettings = mod:original_require("scripts/managers/ui/ui_font_setting
 --#endregion
 
 local HudElementBar = mod:io_dofile("combatbars/scripts/mods/combatbars/UI/settings")
-local UI_bracket_colour = mod:get("UI_bracket_colour")
-    and Color[mod:get("UI_bracket_colour")](255, true)
-    or UIHudSettings.color_tint_main_2
-local UI_pip_colour = mod:get("UI_pip_colour")
-    and Color[mod:get("UI_pip_colour")](255, true)
-    or UIHudSettings.color_tint_main_1
+local UI_bracket_colour = mod:get("UI_bracket_colour") and Color[mod:get("UI_bracket_colour")](255, true) or UIHudSettings.color_tint_main_2
+local UI_pip_colour = mod:get("UI_pip_colour") and Color[mod:get("UI_pip_colour")](255, true) or UIHudSettings.color_tint_main_1
 
 
 local scenegraph_definition = {
@@ -94,9 +90,14 @@ local widget_definitions = {
             --         return Utf8.upper(mod:localize(mod:get(mod:get("gauge_text"))))
             --     end
             -- end)(),
-            value = mod:get("auto_text_option")
-                and Utf8.upper(mod:localize(mod:get(BAR .. "_gauge_text")))
-                or Utf8.upper(mod:localize(mod:get(mod:get(BAR .. "_gauge_text")))),
+            value =
+                (function ()
+                    if mod:get("auto_text_option") then
+                        Utf8.upper(mod:localize(mod:get(BAR .. "_gauge_text")))
+                    else
+                        Utf8.upper(mod:localize(mod:get(mod:get(BAR .. "_gauge_text"))))
+                    end
+                end)(),
             style = name_text_style
         },
         {
