@@ -6,31 +6,6 @@ local HudElementBar = mod:io_dofile("combatbars/scripts/mods/combatbars/UI/setti
 local Definitions = mod:io_dofile("combatbars/scripts/mods/combatbars/UI/blitz/definitions")
 local HudElementCombatBar_blitz = class("HudElementCombatBar_blitz", "HudElementBase")
 
-local resource_info_template = {
-    display_name = nil,
-    max_stacks = nil,
-    max_duration = nil,
-    decay = nil,           -- STACKS FALL OFF 1 AT A TIME ?
-    grenade_ability = nil,
-    talent_resource = nil, -- unit_data_extension:read_component("talent_resource")
-    stack_buff = nil,      -- BUFF THAT DETERMINES STACK COUNT
-    stacks = 0,
-    progress = 0,
-    timed = nil,          -- DOES THE BUFF HAVE A TIMER ?
-    replenish = nil,      -- DOES THE BUFF REFILL ITSELF ?
-    replenish_buff = nil, -- BUFF THAT DETEMINES REFILL
-    damage_per_stack = nil,
-    damage_boost = function(self)
-        if not self.stacks then return nil end
-        if not self.max_stacks then return nil end
-        if not self.damage_per_stack then return nil end
-
-        return math.min(self.stacks, self.max_stacks) * self.damage_per_stack
-    end
-}
-
-local resource_info
-
 HudElementCombatBar_blitz.init = function(self, parent, draw_layer, start_scale)
     HudElementCombatBar_blitz.super.init(self, parent, draw_layer, start_scale, Definitions)
 
@@ -46,6 +21,61 @@ HudElementCombatBar_blitz.init = function(self, parent, draw_layer, start_scale)
     local profile = self._player:profile()
     local player_talents = profile.talents
     local archetype_talents = profile.archetype.talents
+
+    local parent = self._parent
+	local player_extensions = parent:player_extensions()
+
+    local talent_extension = ScriptUnit.extension(self._player.player_unit, "talent_system")
+
+    self.ability = {}
+
+    if player_extensions then
+        local ability_extension = player_extensions.ability
+        local ability_type = "grenade_ability" -- or "combat_ability"
+        local equipped_ability = ability_extension:equipped_abilities().grenade_ability
+
+        local refill = talent_extension:has_special_rule("veteran_grenade_replenishment")
+        mod:echo("refill: " .. (refill and "t" or "f"))
+
+        self.ability = {
+            cooldown            = ability_extension:remaining_ability_cooldown(ability_type),
+            max_cooldown        = ability_extension:max_ability_cooldown(ability_type),
+            cooldown_percent    =   (function()
+                                        if self.ability.cooldown == 0 or self.ability.max_cooldown == 0 then return 1 end
+                                        return 1 - (self.ability.cooldown / self.ability.max_cooldown)
+                                    end),
+            charges             = ability_extension:remaining_ability_charges(ability_type),
+            max_charges         = ability_extension:max_ability_charges(ability_type),
+
+            name                = equipped_ability.name,
+            timed               = refill,
+            replenish           = refill,
+            decay               = true
+        }
+    else
+        self.ability = {
+            cooldown            = 0,
+            max_cooldown        = 0,
+            cooldown_percent    =   (function()
+                                        if self.ability.cooldown == 0 or self.ability.max_cooldown == 0 then return 1 end
+                                        return 1 - (self.ability.cooldown / self.ability.max_cooldown)
+                                    end),
+            charges             = 0,
+            max_charges         = 0,
+
+            name                = "",
+            timed               = false,
+            replenish           = false,
+            decay               = true
+        }
+    end
+
+    if mod.debugging then
+        mod:echo("name " .. self.ability.name)
+        mod:echo("cooldown " .. self.ability.cooldown .. " " .. self.ability.max_cooldown)
+        mod:echo("charges " .. self.ability.charges .. " " .. self.ability.max_charges)
+        mod:echo("t r d " .. (self.ability.timed and "T" or "F") .. " " .. (self.ability.replenish and "T" or "F") .. " " .. (self.ability.decay and "T" or "F"))
+    end
 
     -- TODO: Move this comment to ability
     -- if mod:get("auto_colour") then
@@ -65,62 +95,15 @@ HudElementCombatBar_blitz.init = function(self, parent, draw_layer, start_scale)
         self.color_empty_name = mod:get("blitz_color_empty")
     end
 
-    resource_info = nil
-
-    if self._archetype_name == "veteran" then
-        local replenish_grenade = player_talents.veteran_replenish_grenades == 1
-
-        if player_talents.veteran_krak_grenade then
-            if mod.debugging then mod:notify("KRAK EQUIPPED") end
-            resource_info = {
-                display_name = mod.text_options["text_option_krak"],
-                max_stacks = archetype_talents.veteran_krak_grenade.player_ability.ability.max_charges +
-                    (player_talents.veteran_extra_grenade or 0),
-                max_duration = replenish_grenade and
-                    archetype_talents.veteran_replenish_grenades.format_values.time.value or nil,
-                decay = true,
-                grenade_ability = true,
-                stack_buff = nil,
-                stacks = 0,
-                progress = 0,
-                timed = replenish_grenade,
-                replenish = replenish_grenade,
-                replenish_buff = replenish_grenade and "veteran_grenade_replenishment" or nil,
-                damage_per_stack = nil,
-                damage_boost = nil
-            }
-        end
-
-        
-    end
-
-    if resource_info == nil then
-        resource_info = {
-            display_name = mod.text_options["none"],
-            max_stacks = nil,
-            max_duration = nil,
-            decay = true,
-            grenade_ability = false,
-            stack_buff = nil,
-            stacks = nil,
-            progress = nil,
-            timed = nil,
-            replenish = nil,
-            replenish_buff = nil,
-            damage_per_stack = nil,
-            damage_boost = nil
-        }
-        if mod.debugging then mod:error("No Blitz") end
-    end
 
     -- mod:set("blitz_gauge_text", mod:get("blitz_auto_text_option")
     --     and resource_info.display_name
     --     or mod.text_options["text_option_blitz"])
 
     if mod.debugging then mod:echo("get: auto_text") end
-    if mod:get("auto_text") then
-        mod:set("blitz_gauge_text", resource_info.display_name)
-        if mod.debugging then mod:echo("set: resource_info.display_name") end
+    if mod:get("auto_text") and self.ability.name ~= "" then
+        mod:set("blitz_gauge_text", self.ability.name)
+        if mod.debugging then mod:echo("set: self.ability.name") end
     else
         mod:set("blitz_gauge_text", mod.text_options["text_option_blitz"])
         if mod.debugging then mod:echo("set: text_option_blitz.display_name") end
@@ -141,15 +124,9 @@ end
 
 HudElementCombatBar_blitz.update = function(self, dt, t, ui_renderer, render_settings, input_service)
     HudElementCombatBar_blitz.super.update(self, dt, t, ui_renderer, render_settings, input_service)
-
-    if mod.debugging then mod:echo("self._enabled " .. "true" and self._enabled or "false") end
     if not self._enabled then return end
 
     local widget = self._widgets_by_name.gauge
-    if mod.debugging then
-        mod:echo("self._widgets_by_name.gauge " .. "true" and (not not self._widgets_by_name.gauge) or
-        "false")
-    end
     if not widget then return end
 
     --TODO: Logic here blitzbar/scripts/mods/blitzbar/UI/UI_elements.lua[594<->652]
@@ -158,30 +135,32 @@ HudElementCombatBar_blitz.update = function(self, dt, t, ui_renderer, render_set
     local player_extensions = parent:player_extensions()
 
     if player_extensions then
-        if resource_info.grenade_ability then
-            local ability_extension = player_extensions.ability
-            if ability_extension and ability_extension:ability_is_equipped("grenade_ability") then
-                resource_info.stacks = ability_extension:remaining_ability_charges("grenade_ability")
-            end
 
-            if not resource_info.replenish then
-                resource_info.progress = nil
-            end
+        local ability_extension = player_extensions.ability
+
+        if ability_extension and ability_extension:ability_is_equipped("grenade_ability") then
+
+            self.ability.charges = ability_extension:remaining_ability_charges("grenade_ability")
+            self.ability.max_charges = ability_extension:max_ability_charges("grenade_ability")
+        end
+
+        if self.ability.max_cooldown == 0 then
+            self.ability.cooldown = 0
         end
     end
 
     self:_update_shield_amount()
 
-    if mod:get("show_gauge") then
-        widget.content.visible = true
-    else
+    if not self.ability.replenish and mod:get("fade_in_out") then
         self:_update_visibility(dt)
+    else
+        widget.content.visible = true
     end
 end
 
 -- TODO: need to trigger when talents change or exit inventory
 HudElementCombatBar_blitz._resize_shield = function(self)
-    local shield_amount         = resource_info.max_stacks or 0
+    local shield_amount         = self.ability.max_charges or 0
     local bar_size              = HudElementBar.bar_size
     local segment_spacing       = HudElementBar.spacing
     local total_segment_spacing = segment_spacing * math.max(shield_amount - 1, 0)
@@ -291,10 +270,11 @@ HudElementCombatBar_blitz._resize_shield = function(self)
     name_text_style.offset                     = styles[orientation].name_offset
 
     warning_style.angle                        = styles[orientation].angle
+
 end
 
 HudElementCombatBar_blitz._update_shield_amount = function(self)
-    local shield_amount = resource_info.max_stacks or 0
+    local shield_amount = self.ability.max_charges or 0
     if shield_amount ~= self._shield_amount then
         local amount_difference = (self._shield_amount or 0) - shield_amount
         self._shield_amount = shield_amount
@@ -314,7 +294,7 @@ HudElementCombatBar_blitz._update_shield_amount = function(self)
 end
 
 HudElementCombatBar_blitz._update_visibility = function(self, dt)
-    local draw = resource_info.stacks > 0 or resource_info.replenish
+    local draw = self.ability.charges > 0 or self.ability.replenish --or resource_info.replenish
 
     local alpha_speed = 1 --3
     local alpha_multiplier = self._alpha_multiplier or 0
@@ -335,10 +315,10 @@ HudElementCombatBar_blitz._draw_widgets = function(self, dt, t, input_service, u
         local previous_alpha_multiplier = render_settings.alpha_multiplier
         render_settings.alpha_multiplier = self._alpha_multiplier
 
-        HudElementCombatBar_blitz.super._draw_widgets(self, dt, t, input_service, ui_renderer, render_settings)
-
         local gauge_widget = self._widgets_by_name.gauge
         gauge_widget.content.value_text = self:_get_value_text()
+
+        HudElementCombatBar_blitz.super._draw_widgets(self, dt, t, input_service, ui_renderer, render_settings)
 
         self:_draw_shields(dt, t, ui_renderer)
 
@@ -347,7 +327,7 @@ HudElementCombatBar_blitz._draw_widgets = function(self, dt, t, input_service, u
 end
 
 HudElementCombatBar_blitz._get_value_text = function(self)
-    return string.format("%.0fx", resource_info.stacks)
+    return string.format("%.0fx", self.ability and self.ability.charges or 0)
 end
 
 HudElementCombatBar_blitz._draw_shields = function(self, dt, t, ui_renderer)
@@ -356,7 +336,6 @@ HudElementCombatBar_blitz._draw_shields = function(self, dt, t, ui_renderer)
     if not num_shields then return end
     if num_shields < 1 then return end
 
-    local step_fraction = 1 / num_shields
     local spacing = HudElementBar.spacing
     local shield_offset
     if self._horizontal then
@@ -364,12 +343,14 @@ HudElementCombatBar_blitz._draw_shields = function(self, dt, t, ui_renderer)
     else
         shield_offset = 5 --TODO: find better solution for "y_offset()"
     end
+    
+    local progress = (self.ability.timed and self.ability.cooldown_percent()) or 0.99
+    local stacks = self.ability.charges - (self.ability.replenish and 0 or 1)
+    local souls_progress = (progress + (stacks)) / self.ability.max_charges
+    
+    local decay = self.ability.decay
 
-    local progress = (resource_info.timed and resource_info.progress) or 0.99
-    local stacks = resource_info.stacks - (resource_info.replenish and 0 or 1)
-    local souls_progress = (progress + (stacks)) / resource_info.max_stacks
-
-    local decay = resource_info.decay
+    local step_fraction = 1 / num_shields
 
     for i = num_shields, 1, -1 do
         local shield = self._shields[i]
@@ -395,7 +376,6 @@ HudElementCombatBar_blitz._draw_shields = function(self, dt, t, ui_renderer)
             self._shield_widget.style.full.color[e] = math.lerp(color_empty[e], color_full[e], value)
         end
 
-        mod:echo("self._horizontal " .. "true" and self._horizontal or "false")
         if self._horizontal then
             self._shield_widget.offset[1] = shield_offset
             self._shield_widget.offset[2] = self._flipped and 2 or 1
