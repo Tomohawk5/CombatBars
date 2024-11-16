@@ -63,7 +63,7 @@ HudElementCombatBar_blitz.init = function(self, parent, draw_layer, start_scale)
             charges             = 0,
             max_charges         = 0,
 
-            name                = "",
+            name                = "ability.name",
             timed               = false,
             replenish           = false,
             decay               = true
@@ -74,7 +74,7 @@ HudElementCombatBar_blitz.init = function(self, parent, draw_layer, start_scale)
         mod:echo("name " .. self.ability.name)
         mod:echo("cooldown " .. self.ability.cooldown .. " " .. self.ability.max_cooldown)
         mod:echo("charges " .. self.ability.charges .. " " .. self.ability.max_charges)
-        mod:echo("t r d " .. (self.ability.timed and "T" or "F") .. " " .. (self.ability.replenish and "T" or "F") .. " " .. (self.ability.decay and "T" or "F"))
+        mod:echo("Timed Replenish Decay " .. (self.ability.timed and "T" or "F") .. " " .. (self.ability.replenish and "T" or "F") .. " " .. (self.ability.decay and "T" or "F"))
     end
 
     -- TODO: Move this comment to ability
@@ -82,7 +82,7 @@ HudElementCombatBar_blitz.init = function(self, parent, draw_layer, start_scale)
     --     self.color_full_name = "ui_" .. self._archetype_name
     --     self.color_empty_name = "ui_" .. self._archetype_name .. "_text"
 
-    if mod:get("auto_colour") then
+    if mod:get("blitz_auto_colour") then
         if self._archetype_name == "psyker" then
             self.color_full_name = mod.colours.warp
             self.color_empty_name = mod.colours.warp_dark
@@ -95,18 +95,10 @@ HudElementCombatBar_blitz.init = function(self, parent, draw_layer, start_scale)
         self.color_empty_name = mod:get("blitz_color_empty")
     end
 
-
-    -- mod:set("blitz_gauge_text", mod:get("blitz_auto_text_option")
-    --     and resource_info.display_name
-    --     or mod.text_options["text_option_blitz"])
-
-    if mod.debugging then mod:echo("get: auto_text") end
-    if mod:get("auto_text") and self.ability.name ~= "" then
-        mod:set("blitz_gauge_text", self.ability.name)
-        if mod.debugging then mod:echo("set: self.ability.name") end
+    if mod:get("blitz_gauge_text") == "text_option_auto" then
+        mod.blitz.gauge_text = Utf8.upper(self.ability.name)
     else
-        mod:set("blitz_gauge_text", mod.text_options["text_option_blitz"])
-        if mod.debugging then mod:echo("set: text_option_blitz.display_name") end
+        mod.blitz.gauge_text = Utf8.upper(mod:localize(mod:get("blitz_gauge_text")))
     end
 end
 
@@ -157,8 +149,6 @@ HudElementCombatBar_blitz.update = function(self, dt, t, ui_renderer, render_set
         widget.content.visible = true
     end
 end
-
--- TODO: need to trigger when talents change or exit inventory
 HudElementCombatBar_blitz._resize_shield = function(self)
     local shield_amount         = self.ability.max_charges or 0
     local bar_size              = HudElementBar.bar_size
@@ -188,88 +178,17 @@ HudElementCombatBar_blitz._resize_shield = function(self)
     local name_text_style                      = gauge_style.name_text
     local warning_style                        = gauge_style.warning
 
-    local styles                               = {
-        orientation_option_horizontal = {
-            value_horizontal_alignment      = "right",
-            value_text_horizontal_alignment = "right",
-            value_offset                    = {
-                0,
-                10,
-                3
-            },
-            name_horizontal_alignment       = "left",
-            name_text_horizontal_alignment  = "left",
-            name_offset                     = {
-                0,
-                10,
-                3
-            },
-            angle                           = 0
-        },
-        orientation_option_horizontal_flipped = {
-            value_horizontal_alignment      = "right",
-            value_text_horizontal_alignment = "right",
-            value_offset                    = {
-                0,
-                -30,
-                3
-            },
-            name_horizontal_alignment       = "left",
-            name_text_horizontal_alignment  = "left",
-            name_offset                     = {
-                0,
-                -30,
-                3
-            },
-            angle                           = math.pi
-        },
-        orientation_option_vertical = {
-            value_horizontal_alignment = "right",
-            value_text_horizontal_alignment = "right",
-            value_offset = {
-                -118,
-                -86,
-                3
-            },
-            name_horizontal_alignment = "right",
-            name_text_horizontal_alignment = "right",
-            name_offset = {
-                -118,
-                -104,
-                3
-            },
-            angle = (math.pi * 3) / 2
-        },
-        orientation_option_vertical_flipped = {
-            value_horizontal_alignment = "left",
-            value_text_horizontal_alignment = "left",
-            value_offset = {
-                118,
-                -86,
-                3
-            },
-            name_horizontal_alignment = "left",
-            name_text_horizontal_alignment = "left",
-            name_offset = {
-                118,
-                -104,
-                3
-            },
-            angle = math.pi / 2
-        }
-    }
+    local style = HudElementBar.styles[mod:get("blitz_orientation")]
 
-    local orientation                          = mod:get("blitz_orientation")
+    value_text_style.horizontal_alignment      = style.value_horizontal_alignment
+    value_text_style.text_horizontal_alignment = style.value_text_horizontal_alignment
+    value_text_style.offset                    = style.value_offset
 
-    value_text_style.horizontal_alignment      = styles[orientation].value_horizontal_alignment
-    value_text_style.text_horizontal_alignment = styles[orientation].value_text_horizontal_alignment
-    value_text_style.offset                    = styles[orientation].value_offset
+    name_text_style.horizontal_alignment       = style.name_horizontal_alignment
+    name_text_style.text_horizontal_alignment  = style.name_text_horizontal_alignment
+    name_text_style.offset                     = style.name_offset
 
-    name_text_style.horizontal_alignment       = styles[orientation].name_horizontal_alignment
-    name_text_style.text_horizontal_alignment  = styles[orientation].name_text_horizontal_alignment
-    name_text_style.offset                     = styles[orientation].name_offset
-
-    warning_style.angle                        = styles[orientation].angle
+    warning_style.angle                        = style.angle
 
 end
 

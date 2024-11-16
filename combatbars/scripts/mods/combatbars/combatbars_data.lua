@@ -41,7 +41,8 @@ end
 --#endregion
 --#region ENUMS
 mod.text_options = table.enum(
-    "none",
+    "text_option_none",
+    "text_option_auto",
     "text_option_ability",
     "text_option_blitz",
     "text_option_keystone",
@@ -49,7 +50,7 @@ mod.text_options = table.enum(
 )
 
 mod.value_options = table.enum(
-    "none",
+    "value_option_none",
     "value_option_damage",
     "value_option_stacks",
     "value_option_time_percent",
@@ -64,78 +65,6 @@ mod.orientation_options = table.enum(
 )
 --#endregion
 
-
-
-function bar_widgets()
-    local bars = { "ability", "blitz", "keystone" }
-    local default = {
-        ability = {
-            colour = mod.colours.ability,
-            orientation = mod.orientation_options["orientation_option_horizontal"]
-        },
-        blitz = {
-            colour = mod.colours.kinetic,
-            orientation = mod.orientation_options["orientation_option_horizontal"]
-        },
-        keystone = {
-            colour = mod.colours.keystone,
-            orientation = mod.orientation_options["orientation_option_horizontal"]
-        }
-    }
-    local widgets = {}
-    for _, bar in pairs(bars) do
-        local new_widget = {
-            setting_id = bar .. "_enabled",
-            type = "checkbox",
-            default_value = true,
-            sub_widgets = {
-                {
-                    setting_id = bar .. "_orientation",
-                    type = "dropdown",
-                    default_value = default[bar].orientation,
-                    options = list_options(mod.orientation_options)
-                },
-                {
-                    setting_id = bar .. "_gauge_text",
-                    type = "dropdown",
-                    default_value = default[bar].text,
-                    options = list_options(mod.text_options)
-                },
-                {
-                    setting_id = bar .. "_gauge_value",
-                    type = "dropdown",
-                    default_value = default[bar].value,
-                    options = list_options(mod.value_options)
-                },
-                {
-                    setting_id = bar .. "_gauge_value_text",
-                    type = "checkbox",
-                    default_value = false
-                },
-                {
-                    setting_id = bar .. "_auto_colour",
-                    type = "checkbox",
-                    default_value = false
-                },
-                {
-                    setting_id = bar .. "_color_full",
-                    type = "dropdown",
-                    default_value = default[bar].colour,
-                    options = get_colors()
-                },
-                {
-                    setting_id = bar .. "_color_empty",
-                    type = "dropdown",
-                    default_value = mod.colours.disabled,
-                    options = get_colors()
-                },
-            }
-        }
-        table.insert(widgets, new_widget)
-    end
-    return widgets
-end
-
 return {
     name = mod:localize("mod_name"),
     description = mod:localize("mod_description"),
@@ -146,10 +75,8 @@ return {
                 setting_id = "master_options",
                 type = "group",
                 sub_widgets = {
-                    widget("fade_in_out", "checkbox", true),
+                    widget("fade_in_out", "checkbox", false),
                     widget("spectator", "checkbox", true),
-                    widget("auto_text", "checkbox", true),
-                    widget("auto_colour", "checkbox", true),
                     {
                         setting_id = "UI_pip_colour",
                         type = "dropdown",
@@ -164,9 +91,6 @@ return {
                     },
                 }
             },
-            -- widget("ability_enabled", "checkbox", true), -- custom_colours? else class colours
-            -- widget("blitz_enabled", "checkbox", true),
-            -- widget("keystone_enabled", "checkbox", true),
             {
                 setting_id = "blitz_enabled",
                 type = "checkbox",
@@ -181,8 +105,12 @@ return {
                     {
                         setting_id = "blitz_gauge_text",
                         type = "dropdown",
-                        default_value = mod.text_options["text_option_blitz"],
-                        options = list_options(mod.text_options)
+                        default_value = "text_option_auto",
+                        --options = list_options(mod.text_options)
+                        options = {
+                            { text = "text_option_auto", value = "text_option_auto" },
+                            { text = "text_option_blitz", value = "text_option_blitz" },
+                        }
                     },
                     {
                         setting_id = "blitz_gauge_value",
@@ -191,38 +119,31 @@ return {
                         options = list_options(mod.value_options)
                     },
                     {
-                        setting_id = "blitz_gauge_value_text",
+                        setting_id = "blitz_gauge_value_prefix",
                         type = "checkbox",
                         default_value = false
                     },
                     {
                         setting_id = "blitz_auto_colour",
                         type = "checkbox",
-                        default_value = false
-                    },
-                    {
-                        setting_id = "blitz_color_full",
-                        type = "dropdown",
-                        default_value = mod.colours.grenade,
-                        options = get_colors()
-                    },
-                    {
-                        setting_id = "blitz_color_empty",
-                        type = "dropdown",
-                        default_value = mod.colours.disabled,
-                        options = get_colors()
+                        default_value = true,
+                        sub_widgets = {
+                            {
+                                setting_id = "blitz_color_full",
+                                type = "dropdown",
+                                default_value = mod.colours.grenade,
+                                options = get_colors()
+                            },
+                            {
+                                setting_id = "blitz_color_empty",
+                                type = "dropdown",
+                                default_value = mod.colours.disabled,
+                                options = get_colors()
+                            },
+                        }
                     },
                 }
             },
-
         }
     }
 }
-
---#region bar settings
--- blitz | ability | keystone
--- .. _UI_bracket_colour
--- .. _UI_pip_colour
--- .. "_auto_text_option"
--- .. "_gauge_text" -- set in bar.element.init
---#endregion

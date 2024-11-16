@@ -10,10 +10,8 @@ local HUD_elements = {
 }
 
 
-mod.widget_angles = {}
 for _, e in ipairs(HUD_elements) do
     if mod.debugging then mod:notify("Registering HUD:" .. e) end
-    mod.widget_angles[e] = 0
     local success = mod:register_hud_element({
         class_name = "HudElementCombatBar_" .. e,
         filename = "combatbars/scripts/mods/combatbars/UI/" .. e .. "/elements",
@@ -25,5 +23,5 @@ for _, e in ipairs(HUD_elements) do
         --     return mod:get(e .. "_enabled")
         -- end
     })
-    if mod.debugging then mod:notify(success) end
+    if mod.debugging then mod:notify(e .. " : " .. (success and "success" or "fail")) end
 end

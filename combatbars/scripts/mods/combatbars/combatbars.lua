@@ -1,5 +1,8 @@
 local mod = get_mod("combatbars")
-mod.debugging = false
+mod.debugging = true
+mod.blitz = {
+    gauge_text = "bgt"
+}
 
 mod:io_dofile("combatbars/scripts/mods/combatbars/UI/register")
 
@@ -29,7 +32,7 @@ end
 
 local UIViewHandler = mod:original_require("scripts/managers/ui/ui_view_handler")
 mod:hook_safe(UIViewHandler, "close_view", function(self, view_name, force_close)
-    --mod:echo(view_name)
+    if mod.debugging then mod:echo(view_name) end
     if view_name == "dmf_options_view"
         or view_name == "inventory_view"
         or view_name == "inventory_background_view"
@@ -40,6 +43,7 @@ end)
 
 mod:command("CBdebug", "", function()
     mod.debugging = not mod.debugging
+    mod:echo("CBdebug -> " .. (mod.debugging and "On" or "Off"))
 end)
 
 mod._is_in_hub = function()

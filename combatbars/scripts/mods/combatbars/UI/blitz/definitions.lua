@@ -83,21 +83,7 @@ local widget_definitions = {
             value_id = "name_text",
             style_id = "name_text",
             pass_type = "text",
-            -- value = (function()
-            --     if mod:get("auto_text_option") then
-            --         return Utf8.upper(mod:localize(mod:get("gauge_text")))
-            --     else
-            --         return Utf8.upper(mod:localize(mod:get(mod:get("gauge_text"))))
-            --     end
-            -- end)(),
-            value =
-                (function ()
-                    if mod:get("auto_text_option") then
-                        Utf8.upper(mod:localize(mod:get(BAR .. "_gauge_text")))
-                    else
-                        Utf8.upper(mod:localize(mod:get(mod:get(BAR .. "_gauge_text"))))
-                    end
-                end)(),
+            value = mod[BAR].gauge_text,
             style = name_text_style
         },
         {
@@ -120,7 +106,7 @@ local widget_definitions = {
                     212 / 2,
                     0
                 },
-                angle = mod.widget_angles[BAR],
+                angle = 0,
                 color = UI_bracket_colour
             }
         }
