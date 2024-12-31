@@ -1,7 +1,7 @@
 local mod = get_mod("combatbars")
 mod.debugging = true
 mod.blitz = {
-    gauge_text = "bgt"
+    gauge_text = "<<BLITZ>>"
 }
 
 mod:io_dofile("combatbars/scripts/mods/combatbars/UI/register")

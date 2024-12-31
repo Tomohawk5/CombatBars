@@ -9,6 +9,8 @@ local HudElementCombatBar_blitz = class("HudElementCombatBar_blitz", "HudElement
 HudElementCombatBar_blitz.init = function(self, parent, draw_layer, start_scale)
     HudElementCombatBar_blitz.super.init(self, parent, draw_layer, start_scale, Definitions)
 
+    self._parent = parent
+
     self._shields = {}
     self._shield_width = 0
     self._shield_widget = self:_create_widget("shield", Definitions.shield_definition)
@@ -18,63 +20,11 @@ HudElementCombatBar_blitz.init = function(self, parent, draw_layer, start_scale)
 
     self._enabled = mod:get("blitz_enabled")
 
-    local profile = self._player:profile()
-    local player_talents = profile.talents
-    local archetype_talents = profile.archetype.talents
+    self.ability = nil
 
-    local parent = self._parent
-	local player_extensions = parent:player_extensions()
-
-    local talent_extension = ScriptUnit.extension(self._player.player_unit, "talent_system")
-
-    self.ability = {}
-
-    if player_extensions then
-        local ability_extension = player_extensions.ability
-        local ability_type = "grenade_ability" -- or "combat_ability"
-        local equipped_ability = ability_extension:equipped_abilities().grenade_ability
-
-        local refill = talent_extension:has_special_rule("veteran_grenade_replenishment")
-        mod:echo("refill: " .. (refill and "t" or "f"))
-
-        self.ability = {
-            cooldown            = ability_extension:remaining_ability_cooldown(ability_type),
-            max_cooldown        = ability_extension:max_ability_cooldown(ability_type),
-            cooldown_percent    =   (function()
-                                        if self.ability.cooldown == 0 or self.ability.max_cooldown == 0 then return 1 end
-                                        return 1 - (self.ability.cooldown / self.ability.max_cooldown)
-                                    end),
-            charges             = ability_extension:remaining_ability_charges(ability_type),
-            max_charges         = ability_extension:max_ability_charges(ability_type),
-
-            name                = equipped_ability.name,
-            timed               = refill,
-            replenish           = refill,
-            decay               = true
-        }
-    else
-        self.ability = {
-            cooldown            = 0,
-            max_cooldown        = 0,
-            cooldown_percent    =   (function()
-                                        if self.ability.cooldown == 0 or self.ability.max_cooldown == 0 then return 1 end
-                                        return 1 - (self.ability.cooldown / self.ability.max_cooldown)
-                                    end),
-            charges             = 0,
-            max_charges         = 0,
-
-            name                = "ability.name",
-            timed               = false,
-            replenish           = false,
-            decay               = true
-        }
-    end
-
-    if mod.debugging then
-        mod:echo("name " .. self.ability.name)
-        mod:echo("cooldown " .. self.ability.cooldown .. " " .. self.ability.max_cooldown)
-        mod:echo("charges " .. self.ability.charges .. " " .. self.ability.max_charges)
-        mod:echo("Timed Replenish Decay " .. (self.ability.timed and "T" or "F") .. " " .. (self.ability.replenish and "T" or "F") .. " " .. (self.ability.decay and "T" or "F"))
+    if not self.ability and self._parent then
+        local registered = self:_register_ability()
+        if mod.debugging then mod:echo(registered and "Ability Registered" or "-") end
     end
 
     -- TODO: Move this comment to ability
@@ -95,11 +45,117 @@ HudElementCombatBar_blitz.init = function(self, parent, draw_layer, start_scale)
         self.color_empty_name = mod:get("blitz_color_empty")
     end
 
+
+end
+
+HudElementCombatBar_blitz._register_ability = function(self)
+    local player_extensions = self._parent:player_extensions()
+    local talent_extension = ScriptUnit.extension(self._player.player_unit, "talent_system")
+
+    local profile = self._player:profile()
+
+    if not player_extensions or not talent_extension or not profile then return false end
+
+    local ability_extension = player_extensions.ability
+    if not ability_extension then return false end
+
+    local player_talents = profile.talents
+    --local player_talents = talent_extension:talents()
+    local archetype_talents = profile.archetype.talents
+
+
+--#region
+                -- BLITZ
+
+                --psyker 
+                -- psyker_smite
+                -- psyker_chain_lightning
+                -- psyker_throwing_knives
+
+                --veteran
+                -- veteran_frag_grenade
+                -- veteran_smoke_grenade
+                -- veteran_krak_grenade
+
+                --zealot
+                -- zealot_shock_grenade
+                -- zealot_fire_grenade
+                -- zealot_throwing_knives
+
+                --ogryn
+                -- ogryn_grenade_frag
+                -- ogryn_grenade_box
+                -- ogryn_grenade_box_cluster
+                -- ogryn_grenade_friend_rock
+
+                
+                -- psyker_grenade_throwing_knives
+                -- PlayerAbilities.psyker_throwing_knives
+                -- buff_template_name = "psyker_knife_replenishment"
+			    -- player_talents.psyker_throwing_knives_reduced_cooldown
+                -- buff_template_name = "psyker_reduced_throwing_knife_cooldown"
+                
+                -- --psyker_empowered_ability EMPOLWERED PSIONICS
+                -- talent_extension:has_special_rule("psyker_empowered_grenades")
+                
+                
+                -- --psyker_overcharge_stance_infinite_casting
+                -- buff_extension:has_buff_using_buff_template("psyker_overcharge_stance")
+
+                -- talent_extension:has_special_rule("psyker_overcharge_stance_infinite_casting")
+
+                -- talent_extension:has_special_rule("psyker_increased_max_souls")
+--#endregion
+
+
+    local ability_type = "grenade_ability" -- or "combat_ability"
+    local equipped_ability = ability_extension:equipped_abilities().grenade_ability
+    if not equipped_ability then return false end
+
+    local refill = talent_extension:has_special_rule("veteran_grenade_replenishment") or player_talents.ogryn_grenade_friend_rock or player_talents.psyker_grenade_throwing_knives
+    if mod.debugging then mod:echo("refill: " .. (refill and "t" or "f")) end
+
+    local name = equipped_ability.name
+    local psyker_blitz = name == "psyker_chain_lightning" or name == "psyker_smite"
+
+    self.ability = {
+        cooldown            = ability_extension:remaining_ability_cooldown(ability_type),
+        max_cooldown        = ability_extension:max_ability_cooldown(ability_type),
+        custom_cooldown     = psyker_blitz,
+        cooldown_percent    =   (function()
+                                    if self.ability.cooldown == 0 or self.ability.max_cooldown == 0 then return 1 end
+                                    return 1 - (self.ability.cooldown / self.ability.max_cooldown)
+                                end),
+        charges             = psyker_blitz and 1 or ability_extension:remaining_ability_charges(ability_type),
+        max_charges         = psyker_blitz and 1 or ability_extension:max_ability_charges(ability_type),
+
+        name                = name,
+        timed               = refill,
+        replenish           = refill or psyker_blitz,
+        decay               = true
+    }
+
+    if mod.debugging then
+        mod:echo("name " .. self.ability.name)
+        mod:echo("cooldown " .. self.ability.cooldown .. " " .. self.ability.max_cooldown)
+        mod:echo("charges " .. self.ability.charges .. " " .. self.ability.max_charges)
+        mod:echo("Timed Replenish Decay " .. (self.ability.timed and "T" or "F") .. " " .. (self.ability.replenish and "T" or "F") .. " " .. (self.ability.decay and "T" or "F"))
+    end
+
     if mod:get("blitz_gauge_text") == "text_option_auto" then
-        mod.blitz.gauge_text = Utf8.upper(self.ability.name)
+        if mod.debugging then
+            mod:notify(self.ability.name)
+            mod:notify(player_talents[self.ability.name]) --TODO: nil on psyker (talent is psyker_grenade_throwing_knives)
+            --if player_talents[self.ability.name] then mod:notify(player_talents[self.ability.name].display_name) end
+        end
+
+        --mod.blitz.gauge_text = Utf8.upper(Localize(player_talents[self.ability.name].display_name)) work for abilities whose name matches thier talent
+        mod.blitz.gauge_text = self.ability.name
     else
         mod.blitz.gauge_text = Utf8.upper(mod:localize(mod:get("blitz_gauge_text")))
     end
+
+    return true
 end
 
 HudElementCombatBar_blitz.destroy = function(self)
@@ -123,6 +179,13 @@ HudElementCombatBar_blitz.update = function(self, dt, t, ui_renderer, render_set
 
     --TODO: Logic here blitzbar/scripts/mods/blitzbar/UI/UI_elements.lua[594<->652]
 
+
+    if not self.ability then
+        local registered = self:_register_ability()
+        if mod.debugging then mod:notify(registered and "Ability Registered" or "-") end
+        if not registered then return end
+    end
+
     local parent = self._parent
     local player_extensions = parent:player_extensions()
 
@@ -133,17 +196,27 @@ HudElementCombatBar_blitz.update = function(self, dt, t, ui_renderer, render_set
         if ability_extension and ability_extension:ability_is_equipped("grenade_ability") then
 
             self.ability.charges = ability_extension:remaining_ability_charges("grenade_ability")
-            self.ability.max_charges = ability_extension:max_ability_charges("grenade_ability")
+            --self.ability.max_charges = ability_extension:max_ability_charges("grenade_ability")
+
+            self.ability.cooldown = ability_extension:remaining_ability_cooldown("grenade_ability")
         end
 
-        if self.ability.max_cooldown == 0 then
-            self.ability.cooldown = 0
+        if self.ability.custom_cooldown then
+            if self.ability.name == "psyker_chain_lightning" then
+                self.ability.cooldown = 0.75
+            elseif self.ability.name == "psyker_smite" then
+                self.ability.cooldown = 0.50
+            else
+                self.ability.cooldown = 0.25
+            end
+        else
+            if self.ability.max_cooldown == 0 then self.ability.cooldown = 0 end
         end
     end
 
     self:_update_shield_amount()
 
-    if not self.ability.replenish and mod:get("fade_in_out") then
+    if mod:get("fade_in_out") and not self.ability.replenish then
         self:_update_visibility(dt)
     else
         widget.content.visible = true
@@ -159,10 +232,10 @@ HudElementCombatBar_blitz._resize_shield = function(self)
     self._shield_width          = math.round(shield_amount > 0 and total_bar_length / shield_amount or total_bar_length)
     local shield_height         = 9
 
-    local horizontal            = mod:get("blitz_orientation") == mod.orientation_options["orientation_option_horizontal"] or mod:get("blitz_orientation") == mod.orientation_options["orientation_option_horizontal_flipped"]
+    local horizontal            = mod:get("blitz_orientation") == "orientation_option_horizontal" or mod:get("blitz_orientation") == "orientation_option_horizontal_flipped"
     self._horizontal            = horizontal
 
-    local flipped               = mod:get("blitz_orientation") == mod.orientation_options["orientation_option_horizontal_flipped"] or mod:get("blitz_orientation") == mod.orientation_options["orientation_option_vertical_flipped"]
+    local flipped               = mod:get("blitz_orientation") == "orientation_option_horizontal_flipped" or mod:get("blitz_orientation") == "orientation_option_vertical_flipped"
     self._flipped               = flipped
 
     local width                 = horizontal and self._shield_width or shield_height
@@ -246,7 +319,18 @@ HudElementCombatBar_blitz._draw_widgets = function(self, dt, t, input_service, u
 end
 
 HudElementCombatBar_blitz._get_value_text = function(self)
-    return string.format("%.0fx", self.ability and self.ability.charges or 0)
+    if not self.ability then return "" end
+    local option = mod:get("blitz_gauge_value")
+    if option == "value_option_stacks" then
+        return string.format("%.0fx", self.ability and self.ability.charges or 0)
+    end
+    if option == "value_option_time_seconds" then
+        return string.format("%.2fs", self.ability and self.ability.cooldown or 0)
+    end
+    if option == "value_option_time_percent" then
+        return string.format("%02.0f%%", self.ability and self.ability:cooldown_percent() * 100 or 0)
+    end
+    return ""
 end
 
 HudElementCombatBar_blitz._draw_shields = function(self, dt, t, ui_renderer)
@@ -260,13 +344,14 @@ HudElementCombatBar_blitz._draw_shields = function(self, dt, t, ui_renderer)
     if self._horizontal then
         shield_offset = (self._shield_width + spacing) * (num_shields - 1) * 0.5
     else
-        shield_offset = 5 --TODO: find better solution for "y_offset()"
+        shield_offset = ((self._shield_width - spacing) * (num_shields + 0) * 0.5)
+                        - (HudElementBar.bar_size[1] - spacing * (num_shields + 1))
     end
-    
+
     local progress = (self.ability.timed and self.ability.cooldown_percent()) or 0.99
     local stacks = self.ability.charges - (self.ability.replenish and 0 or 1)
     local souls_progress = (progress + (stacks)) / self.ability.max_charges
-    
+
     local decay = self.ability.decay
 
     local step_fraction = 1 / num_shields
@@ -299,16 +384,18 @@ HudElementCombatBar_blitz._draw_shields = function(self, dt, t, ui_renderer)
             self._shield_widget.offset[1] = shield_offset
             self._shield_widget.offset[2] = self._flipped and 2 or 1
         else
-            local scenegraph_size = self:scenegraph_size("shield")
-            local height = scenegraph_size.y
-
             self._shield_widget.offset[1] = 0
-            self._shield_widget.offset[2] = height - shield_offset
+            self._shield_widget.offset[2] = shield_offset
         end
 
         UIWidget.draw(self._shield_widget, ui_renderer) -- TODO: Add dirty checks for performance
 
-        shield_offset = shield_offset - self._shield_width - spacing
+        if self._horizontal then
+            shield_offset = shield_offset - self._shield_width - spacing
+        else
+            shield_offset = shield_offset + self._shield_width + spacing
+        end
+
     end
 end
 
