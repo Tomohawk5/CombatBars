@@ -1,5 +1,5 @@
 local mod = get_mod("combatbars")
-mod.debugging = true
+mod.debugging = false
 mod.blitz = {
     gauge_text = "<<BLITZ>>"
 }
@@ -43,7 +43,7 @@ end)
 
 mod:command("CBdebug", "", function()
     mod.debugging = not mod.debugging
-    mod:echo("CBdebug -> " .. (mod.debugging and "On" or "Off"))
+    mod:echo(" CBdebug -> " .. (mod.debugging and "On" or "Off"))
 end)
 
 mod._is_in_hub = function()

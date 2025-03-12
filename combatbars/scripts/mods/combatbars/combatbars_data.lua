@@ -51,6 +51,7 @@ mod.text_options = table.enum(
 
 mod.value_options = table.enum(
     "value_option_none",
+    "value_option_auto",
     "value_option_damage",
     "value_option_stacks",
     "value_option_time_percent",
@@ -108,6 +109,7 @@ return {
                         default_value = "text_option_auto",
                         --options = list_options(mod.text_options)
                         options = {
+                            { text = "text_option_none", value = "text_option_none" },
                             { text = "text_option_auto", value = "text_option_auto" },
                             { text = "text_option_blitz", value = "text_option_blitz" },
                         }
@@ -115,7 +117,7 @@ return {
                     {
                         setting_id = "blitz_gauge_value",
                         type = "dropdown",
-                        default_value = mod.value_options["value_option_stacks"],
+                        default_value = "value_option_auto",
                         options = list_options(mod.value_options)
                     },
                     {

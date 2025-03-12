@@ -1,6 +1,7 @@
 local mod = get_mod("combatbars")
 
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
+local PlayerAbilities = mod:original_require("scripts/settings/ability/player_abilities/player_abilities")
 
 local HudElementBar = mod:io_dofile("combatbars/scripts/mods/combatbars/UI/settings")
 local Definitions = mod:io_dofile("combatbars/scripts/mods/combatbars/UI/blitz/definitions")
@@ -151,6 +152,8 @@ HudElementCombatBar_blitz._register_ability = function(self)
 
         --mod.blitz.gauge_text = Utf8.upper(Localize(player_talents[self.ability.name].display_name)) work for abilities whose name matches thier talent
         mod.blitz.gauge_text = self.ability.name
+    elseif mod:get("blitz_gauge_text") == "text_option_none" then
+        mod.blitz.gauge_text = ""
     else
         mod.blitz.gauge_text = Utf8.upper(mod:localize(mod:get("blitz_gauge_text")))
     end
@@ -320,9 +323,18 @@ end
 
 HudElementCombatBar_blitz._get_value_text = function(self)
     if not self.ability then return "" end
+    local prefix = mod:get("blitz_gauge_value_prefix")
     local option = mod:get("blitz_gauge_value")
+
+    if option == "value_option_auto" then
+        if self.ability.timed then  option = "value_option_time_percent"
+        else                        option = "value_option_stacks" end
+    end
+
     if option == "value_option_stacks" then
-        return string.format("%.0fx", self.ability and self.ability.charges or 0)
+        return string.format(
+        prefix and mod:localize(option) .. "%.0fx" or "%.0fx",
+        self.ability and self.ability.charges or 0)
     end
     if option == "value_option_time_seconds" then
         return string.format("%.2fs", self.ability and self.ability.cooldown or 0)
