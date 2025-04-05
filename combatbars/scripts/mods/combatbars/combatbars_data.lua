@@ -46,13 +46,14 @@ mod.text_options = table.enum(
     "text_option_ability",
     "text_option_blitz",
     "text_option_keystone",
-    "text_option_krak"
+    "text_option_krak",
+    "text_option_soul"
 )
 
 mod.value_options = table.enum(
     "value_option_none",
     "value_option_auto",
-    "value_option_damage",
+    "value_option_value",
     "value_option_stacks",
     "value_option_time_percent",
     "value_option_time_seconds"
@@ -138,6 +139,60 @@ return {
                             },
                             {
                                 setting_id = "blitz_color_empty",
+                                type = "dropdown",
+                                default_value = mod.colours.disabled,
+                                options = get_colors()
+                            },
+                        }
+                    },
+                }
+            },
+            {
+                setting_id = "keystone_enabled",
+                type = "checkbox",
+                default_value = true,
+                sub_widgets = {
+                    {
+                        setting_id = "keystone_orientation",
+                        type = "dropdown",
+                        default_value = mod.orientation_options["orientation_option_horizontal"],
+                        options = list_options(mod.orientation_options)
+                    },
+                    {
+                        setting_id = "keystone_gauge_text",
+                        type = "dropdown",
+                        default_value = "text_option_auto",
+                        --options = list_options(mod.text_options)
+                        options = {
+                            { text = "text_option_none", value = "text_option_none" },
+                            { text = "text_option_auto", value = "text_option_auto" },
+                            { text = "text_option_keystone", value = "text_option_keystone" },
+                        }
+                    },
+                    {
+                        setting_id = "keystone_gauge_value",
+                        type = "dropdown",
+                        default_value = "value_option_auto",
+                        options = list_options(mod.value_options)
+                    },
+                    {
+                        setting_id = "keystone_gauge_value_prefix",
+                        type = "checkbox",
+                        default_value = false
+                    },
+                    {
+                        setting_id = "keystone_auto_colour",
+                        type = "checkbox",
+                        default_value = true,
+                        sub_widgets = {
+                            {
+                                setting_id = "keystone_color_full",
+                                type = "dropdown",
+                                default_value = mod.colours.keystone,
+                                options = get_colors()
+                            },
+                            {
+                                setting_id = "keystone_color_empty",
                                 type = "dropdown",
                                 default_value = mod.colours.disabled,
                                 options = get_colors()

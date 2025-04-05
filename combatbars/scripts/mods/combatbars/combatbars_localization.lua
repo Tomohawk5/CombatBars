@@ -39,7 +39,7 @@ local localizations = {
         en = "Combat Bars",
     },
     mod_description = {
-        en = "Adds a stamina style bar to the HUD for blitz, combat ability & grenades",
+        en = "Adds a stamina style bar to the HUD for blitz, combat ability & keystones",
     },
 
     -- ##############################

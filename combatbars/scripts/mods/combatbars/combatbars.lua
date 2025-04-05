@@ -1,7 +1,10 @@
 local mod = get_mod("combatbars")
-mod.debugging = false
+mod.debugging = true --TODO: Turn off 
 mod.blitz = {
     gauge_text = "<<BLITZ>>"
+}
+mod.keystone = {
+    gauge_text = "<<KEYSTONE>>"
 }
 
 mod:io_dofile("combatbars/scripts/mods/combatbars/UI/register")

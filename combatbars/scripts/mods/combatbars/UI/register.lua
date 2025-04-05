@@ -6,7 +6,8 @@ local HUD_elements = {
     -- "ability", --HudElementCombatBar
     -- "blitz", --HudElementBlitzBar
     -- "keystone" --HudElementKeystoneBar
-    "blitz"
+    "blitz",
+    "keystone"
 }
 
 
