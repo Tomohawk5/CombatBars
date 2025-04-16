@@ -1,5 +1,5 @@
 local mod = get_mod("combatbars")
-mod.debugging = true --TODO: Turn off 
+mod.debugging = false --TODO: Turn off 
 mod.blitz = {
     gauge_text = "<<BLITZ>>"
 }
