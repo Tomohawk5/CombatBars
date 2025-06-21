@@ -103,18 +103,30 @@ HudElementCombatBar_keystone._register_keystone = function(self)
     if self._archetype_name == "arbites" then
         if player_talents.arbites_exectution_order then
             if player_talents.arbites_keeping_protocol then
-                self.keystone.name = "keeping protocol"
+                self.keystone.name = "loc_talent_arbites_keeping_protocol" --keeping protocol
                 self.keystone.max_stacks = 30
                 self.keystone.stack_buff = "arbites_keeping_protocol"
                 self.keystone.stack_value = 0.01
             else
-                self.keystone.name = "execution order"
+                self.keystone.name = "loc_talent_arbites_execution_order" --execution order
                 self.keystone.max_stacks = 1
                 self.keystone.stack_buff = "arbites_exectution_order"
                 self.keystone.stack_value = 0.15
                 self.keystone.stack_duration = 8
                 self.keystone.timed = true
             end
+        end
+
+        if player_talents.arbites_terminus_warrant then
+            self.keystone.name = "loc_talent_arbites_terminus_warrant" --terminus warrant
+        end
+
+        if player_talents.arbites_forceful then
+            self.keystone.name = "loc_talent_arbites_forceful" --forceful
+            self.keystone.max_stacks = 10
+            self.keystone.stack_buff = "arbites_forceful"
+            self.keystone.stack_value = 0.05
+            self.keystone.stack_duration = 5
         end
     end    
     if self._archetype_name == "psyker" then
@@ -123,7 +135,7 @@ HudElementCombatBar_keystone._register_keystone = function(self)
             local warp_siphon = TalentSettings.psyker_2.passive_1 -- [base_max_souls = 4, damage = 0.24, soul_duration = 25]
             local warp_battery = TalentSettings.psyker_2.offensive_2_1.max_souls_talent -- 6
 
-            self.keystone.name = mod.text_options["text_option_soul"]
+            self.keystone.name = "loc_talent_psyker_souls" --mod.text_options["text_option_soul"]
             self.keystone.stack_buff = talent_extension:has_special_rule("psyker_increased_max_souls") and "psyker_souls_increased_max_stacks" or "psyker_souls"
             self.keystone.max_stacks = talent_extension:has_special_rule("psyker_increased_max_souls") and warp_battery or warp_siphon.base_max_souls
             self.keystone.stack_value = warp_siphon.damage / warp_battery
@@ -136,7 +148,7 @@ HudElementCombatBar_keystone._register_keystone = function(self)
         if player_talents.psyker_empowered_ability == 1 then
             local increased_stacks = talent_extension:has_special_rule("psyker_empowered_grenades_increased_max_stacks")
 
-            self.keystone.name = "empowered psyonics"
+            self.keystone.name = "loc_talent_psyker_empowered_ability" --empowered psyonics
             self.keystone.max_stacks = increased_stacks and TalentSettings.psyker_3.offensive_2.max_stacks_talent or 1
             self.keystone.stack_buff = increased_stacks and "psyker_empowered_grenades_passive_visual_buff_increased" or "psyker_empowered_grenades_passive_visual_buff"
         end
@@ -145,7 +157,7 @@ HudElementCombatBar_keystone._register_keystone = function(self)
             local increased_stacks = talent_extension:has_special_rule("psyker_mark_increased_max_stacks")
 		    local increased_duration = talent_extension:has_special_rule("psyker_mark_increased_duration")
 
-            self.keystone.name = "disrupt destiny"
+            self.keystone.name = "loc_talent_psyker_marked_enemies_passive" --disrupt destiny
             self.keystone.max_stacks = increased_stacks and 25 or 15
             self.keystone.stack_buff =  (increased_stacks and "psyker_marked_enemies_passive_bonus_stacking_increased_stacks") or
                                         (increased_duration and "psyker_marked_enemies_passive_bonus_stacking_increased_duration") or
@@ -158,24 +170,24 @@ HudElementCombatBar_keystone._register_keystone = function(self)
     end
 
     if self._archetype_name == "zealot" then
+        if player_talents.zealot_fanatic_rage then
+            self.keystone.name = "loc_talent_zealot_fanatic_rage" --blazing piety
+            self.keystone.max_stacks = 25
+            self.keystone.stack_buff = "zealot_fanatic_rage"
+            self.keystone.visual_stacks = true
+        end
+
         if player_talents.zealot_martyrdom then
             local health_extension = ScriptUnit.extension(self._player.player_unit, "health_system")
-            self.keystone.name = "martyrdom"
+            self.keystone.name = "loc_talent_zealot_martyrdom" --martyrdom
             self.keystone.max_stacks = health_extension and (health_extension:max_wounds() - 1) or talents.zealot_martyrdom.format_values.max_wounds.value
             self.keystone.stack_buff = "zealot_martyrdom_base"
             self.keystone.stack_value = 0.08
 
         end
 
-        if player_talents.zealot_fanatic_rage then
-            self.keystone.name = "blazing piety"
-            self.keystone.max_stacks = 25
-            self.keystone.stack_buff = "zealot_fanatic_rage"
-            self.keystone.visual_stacks = true
-        end
-
-        if player_talents.zealot_quickness_passive then
-            self.keystone.name = "inexorable judgement"
+        if player_talents.zealot_quickness then
+            self.keystone.name = "loc_talent_zealot_quickness" --inexorable judgement
             self.keystone.max_stacks = 15
             self.keystone.stack_buff = "zealot_quickness_passive"
             self.keystone.stack_value = 0.01
@@ -183,10 +195,22 @@ HudElementCombatBar_keystone._register_keystone = function(self)
         end 
     end
     if self._archetype_name == "veteran" then
+        if player_talents.veteran_snipers_focus then
+            local increased_stacks = talent_extension:has_special_rule("veteran_snipers_focus_increased_stacks") and 15 or 10
+            self.keystone.name = "loc_talent_veteran_snipers_focus" --marksman's focus
+            self.keystone.max_stacks = increased_stacks
+            self.keystone.stack_buff = "veteran_snipers_focus"
+            self.keystone.stack_value = 0.075
+            self.keystone.stack_duration = 0.5
+            self.keystone.resource = unit_data_extension:read_component("talent_resource")
+            self.keystone.timed = true
+            self.keystone.decay = true
+
+        end
 
         if player_talents.veteran_improved_tag then
             local increased_stacks = talent_extension:has_special_rule("veteran_improved_tag_more_damage") and 8 or 5
-            self.keystone.name = "focus target"
+            self.keystone.name = "loc_talent_veteran_improved_tag" --focus target
             self.keystone.max_stacks = increased_stacks
             self.keystone.stack_buff = "veteran_improved_tag_effect"
             self.keystone.stack_value = 0.04
@@ -198,44 +222,35 @@ HudElementCombatBar_keystone._register_keystone = function(self)
             self.keystone.replenish_buff = "veteran_improved_tag"
         end
 
-        if player_talents.veteran_snipers_focus then
-            local increased_stacks = talent_extension:has_special_rule("veteran_snipers_focus_increased_stacks") and 15 or 10
-            self.keystone.name = "marksman's focus"
-            self.keystone.max_stacks = increased_stacks
-            self.keystone.stack_buff = "veteran_snipers_focus"
-            self.keystone.stack_value = 0.075
-            self.keystone.stack_duration = 0.5
-            self.keystone.resource = unit_data_extension:read_component("talent_resource")
-            self.keystone.timed = true
-            self.keystone.decay = true
-
+        if player_talents.veteran_weapon_switch then
+            self.keystone.name = "loc_talent_veteran_weapon_switch" --weapon specialist
         end
+
 
     end
     if self._archetype_name == "ogryn" then
         if player_talents.ogryn_passive_heavy_hitter then
-            self.keystone.name = "heavy hitter"
+            self.keystone.name = "loc_talent_ogryn_passive_heavy_hitter" --heavy hitter
             self.keystone.max_stacks = 8
             self.keystone.stack_buff = "ogryn_heavy_hitter_damage_effect" --"ogryn_passive_heavy_hitter" --"ogryn_heavy_hitter_damage_effect"
             self.keystone.stack_value = 0.05
             self.keystone.stack_duration = 7.5
             self.keystone.timed = true
             --self.keystone.decay = true
+            -- ogryn_heavy_hitter = {
+            -- 	cleave = 0.15,
+            -- 	heavy_stacks = 2,
+            -- 	max_stacks = 8,
+            -- 	melee_damage = 0.03,
+            -- 	stacks = 1,
+            -- 	stagger = 0.1,
+            -- 	tdr = 0.015,
+            -- 	toughness_melee_replenish = 0.15,
+            -- },
         end
 
-        -- ogryn_heavy_hitter = {
-		-- 	cleave = 0.15,
-		-- 	heavy_stacks = 2,
-		-- 	max_stacks = 8,
-		-- 	melee_damage = 0.03,
-		-- 	stacks = 1,
-		-- 	stagger = 0.1,
-		-- 	tdr = 0.015,
-		-- 	toughness_melee_replenish = 0.15,
-		-- },
-
         if player_talents.ogryn_carapace_armor then
-            self.keystone.name = "feel no pain"
+            self.keystone.name = "loc_talent_ogryn_carapace_armor" --feel no pain
             self.keystone.max_stacks = 10
             self.keystone.stack_buff = "ogryn_carapace_armor_child"
             self.keystone.stack_value = 0.025
@@ -246,7 +261,7 @@ HudElementCombatBar_keystone._register_keystone = function(self)
         end
 
         if player_talents.ogryn_leadbelcher_no_ammo_chance then
-            self.keystone.name = "burst limiter override"
+            self.keystone.name = "loc_talent_ogryn_chance_to_not_consume_ammo" --burst limiter override
             self.keystone.max_stacks = 10
             self.keystone.stack_buff = "ogryn_blo_stacking_buff"
             self.keystone.stack_value = 0.02
