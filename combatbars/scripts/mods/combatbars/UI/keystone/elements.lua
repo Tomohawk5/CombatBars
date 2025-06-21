@@ -42,6 +42,7 @@ end
 HudElementCombatBar_keystone._register_keystone = function(self)
     local player_extensions = self._parent:player_extensions()
     local talent_extension = ScriptUnit.extension(self._player.player_unit, "talent_system")
+    local unit_data_extension = ScriptUnit.has_extension(self._player.player_unit, "unit_data_system")
 
     local profile = self._player:profile()
 
@@ -98,6 +99,24 @@ HudElementCombatBar_keystone._register_keystone = function(self)
         decay = false           -- STACKS FALL OFF 1 AT A TIME ?
     }
 
+
+    if self._archetype_name == "arbites" then
+        if player_talents.arbites_exectution_order then
+            if player_talents.arbites_keeping_protocol then
+                self.keystone.name = "keeping protocol"
+                self.keystone.max_stacks = 30
+                self.keystone.stack_buff = "arbites_keeping_protocol"
+                self.keystone.stack_value = 0.01
+            else
+                self.keystone.name = "execution order"
+                self.keystone.max_stacks = 1
+                self.keystone.stack_buff = "arbites_exectution_order"
+                self.keystone.stack_value = 0.15
+                self.keystone.stack_duration = 8
+                self.keystone.timed = true
+            end
+        end
+    end    
     if self._archetype_name == "psyker" then
         if player_talents.psyker_passive_souls_from_elite_kills == 1 then
 
@@ -138,6 +157,61 @@ HudElementCombatBar_keystone._register_keystone = function(self)
         end
     end
 
+    if self._archetype_name == "zealot" then
+        if player_talents.zealot_martyrdom then
+            local health_extension = ScriptUnit.extension(self._player.player_unit, "health_system")
+            self.keystone.name = "martyrdom"
+            self.keystone.max_stacks = health_extension and (health_extension:max_wounds() - 1) or talents.zealot_martyrdom.format_values.max_wounds.value
+            self.keystone.stack_buff = "zealot_martyrdom_base"
+            self.keystone.stack_value = 0.08
+
+        end
+
+        if player_talents.zealot_fanatic_rage then
+            self.keystone.name = "blazing piety"
+            self.keystone.max_stacks = 25
+            self.keystone.stack_buff = "zealot_fanatic_rage"
+            self.keystone.visual_stacks = true
+        end
+
+        if player_talents.zealot_quickness_passive then
+            self.keystone.name = "inexorable judgement"
+            self.keystone.max_stacks = 15
+            self.keystone.stack_buff = "zealot_quickness_passive"
+            self.keystone.stack_value = 0.01
+            self.keystone.stack_duration = 6
+        end 
+    end
+    if self._archetype_name == "veteran" then
+
+        if player_talents.veteran_improved_tag then
+            local increased_stacks = talent_extension:has_special_rule("veteran_improved_tag_more_damage") and 8 or 5
+            self.keystone.name = "focus target"
+            self.keystone.max_stacks = increased_stacks
+            self.keystone.stack_buff = "veteran_improved_tag_effect"
+            self.keystone.stack_value = 0.04
+            self.keystone.stack_duration = 2
+            self.keystone.stack_offset = -1
+            self.keystone.resource = unit_data_extension:read_component("talent_resource")
+            self.keystone.timed = true
+            self.keystone.replenish = true
+            self.keystone.replenish_buff = "veteran_improved_tag"
+        end
+
+        if player_talents.veteran_snipers_focus then
+            local increased_stacks = talent_extension:has_special_rule("veteran_snipers_focus_increased_stacks") and 15 or 10
+            self.keystone.name = "marksman's focus"
+            self.keystone.max_stacks = increased_stacks
+            self.keystone.stack_buff = "veteran_snipers_focus"
+            self.keystone.stack_value = 0.075
+            self.keystone.stack_duration = 0.5
+            self.keystone.resource = unit_data_extension:read_component("talent_resource")
+            self.keystone.timed = true
+            self.keystone.decay = true
+
+        end
+
+    end
     if self._archetype_name == "ogryn" then
         if player_talents.ogryn_passive_heavy_hitter then
             self.keystone.name = "heavy hitter"
@@ -165,7 +239,7 @@ HudElementCombatBar_keystone._register_keystone = function(self)
             self.keystone.max_stacks = 10
             self.keystone.stack_buff = "ogryn_carapace_armor_child"
             self.keystone.stack_value = 0.025
-            self.keystone.stack_duration = 6
+            self.keystone.stack_duration = 3
             self.keystone.timed = true
             self.keystone.replenish = true
             self.keystone.replenish_buff = "ogryn_carapace_armor_parent"
@@ -200,7 +274,7 @@ HudElementCombatBar_keystone._register_keystone = function(self)
             mod:notify(player_talents[self.keystone.name])
         end
 
-        mod.keystone.gauge_text = self.keystone.name
+        mod.keystone.gauge_text = Utf8.upper(self.keystone.name)
     elseif mod:get("keystone_gauge_text") == "text_option_none" then
         mod.keystone.gauge_text = ""
     else
@@ -235,6 +309,7 @@ HudElementCombatBar_keystone.update = function(self, dt, t, ui_renderer, render_
         if not registered then return end
     end
 
+
     local parent = self._parent
     local player_extensions = parent:player_extensions()
 
@@ -259,17 +334,22 @@ HudElementCombatBar_keystone.update = function(self, dt, t, ui_renderer, render_
 
                 if instance_buff_name == stack_buff then
                     found_buff = found_buff + 1
-                    self.keystone.stacks = math.min(buff_instance:stack_count(), self.keystone.max_stacks)
-                    if not self.keystone.replenish then self.keystone.duration = buff_instance:duration_progress() end
+                    local stack_count = self.keystone.visual_stacks and buff_instance:visual_stack_count() or buff_instance:stack_count()
+                    self.keystone.stacks = math.min(stack_count  + (self.keystone.stack_offset or 0), self.keystone.max_stacks)
+                    if self.keystone.timed and not self.keystone.replenish then self.keystone.duration = buff_instance:duration_progress() end
                     if found_buff == found_buff_target then break end
                 end
             end
 
-            if not found_buff then
+            if found_buff < found_buff_target then
                 self.keystone.stacks = 0
                 self.keystone.duration = 0
             end
         end
+    end
+    if self.keystone.resource then
+        self.keystone.stacks = math.max(self.keystone.resource.current_resource + (self.keystone.stack_offset or 0), 0)
+        self.keystone.duration = 1
     end
 
     self:_update_shield_amount()

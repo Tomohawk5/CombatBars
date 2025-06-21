@@ -31,7 +31,6 @@ local function colour_text(text, color_name)
     local color = Color[color_name or "ui_disabled_text_color"](255, true) -- color[0] = alpha
     return string.format("{#color(%s,%s,%s)}", color[2], color[3], color[4]) .. text .. "{#reset()}"
 end
-
 --#endregion
 
 local localizations = {
@@ -86,6 +85,25 @@ local localizations = {
 	},
     --#endregion
 }
+
+-- local bars = {"blitz", "keystone"}
+-- local options = {"_orientation", "_gauge_text", "_gauge_value", "_gauge_value_prefix", "_auto_colour", "_color_full", }
+-- for _, bar in pairs(bars) do
+-- 	localizations[bar .. "_show_gauge"] = {
+-- 		en = cf("ui_" .. bar) .. localizations[bar].en .. "{#reset()}"
+--     }
+-- 	for language, _ in pairs(localizations[bar]) do
+-- 		localizations[bar .. "_show_gauge"][language] = cf("ui_" .. bar) .. localizations[bar][language] .. "{#reset()}"
+-- 	end
+-- 	for _, option in pairs(options) do
+-- 		localizations[bar .. option] = table.clone(localizations[option])
+-- 		localizations[bar .. option .. "_description"] = table.clone(localizations[option .. "_description"])
+-- 		for language, _ in pairs(localizations[bar .. option]) do
+-- 			localizations[bar .. option][language] = cf("ui_" .. bar .. "_text") .. localizations[bar .. option][language] .. "{#reset()}"
+-- 			localizations[bar .. option .. "_description"][language] = localizations[bar .. option .. "_description"][language]
+-- 		end
+-- 	end
+-- end
 
 --#region COLOURS
 local function display_name(text)
