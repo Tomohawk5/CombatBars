@@ -196,20 +196,20 @@ HudElementCombatBar_keystone._register_keystone = function(self)
     end
     if self._archetype_name == "veteran" then
         if player_talents.veteran_snipers_focus then
-            local increased_stacks = talent_extension:has_special_rule("veteran_snipers_focus_increased_stacks") and 15 or 10
+            local increased_stacks = talent_extension:has_special_rule("veteran_snipers_focus_increased_stacks")
             self.keystone.name = "loc_talent_veteran_snipers_focus" --marksman's focus
-            self.keystone.max_stacks = increased_stacks
-            self.keystone.stack_buff = "veteran_snipers_focus"
+            self.keystone.max_stacks = increased_stacks and 15 or 10
+            self.keystone.stack_buff = increased_stacks and "veteran_snipers_focus_stat_buff_increased_stacks" or "veteran_snipers_focus_stat_buff"
             self.keystone.stack_value = 0.075
-            self.keystone.stack_duration = 0.5
-            self.keystone.resource = unit_data_extension:read_component("talent_resource")
+            self.keystone.stack_duration = 5
+            --self.keystone.resource = unit_data_extension:read_component("talent_resource")
             self.keystone.timed = true
             self.keystone.decay = true
 
         end
 
         if player_talents.veteran_improved_tag then
-            local increased_stacks = talent_extension:has_special_rule("veteran_improved_tag_more_damage") and 8 or 5
+            local increased_stacks = talent_extension:has_special_rule("veteran_improved_tag_more_damage") and 6 or 4
             self.keystone.name = "loc_talent_veteran_improved_tag" --focus target
             self.keystone.max_stacks = increased_stacks
             self.keystone.stack_buff = "veteran_improved_tag_effect"
